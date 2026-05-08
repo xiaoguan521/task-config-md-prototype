@@ -1,0 +1,15 @@
+services:
+  task-config-md-prototype:
+    build:
+      context: .
+    image: task-config-md-prototype:local
+    container_name: task-config-md-prototype
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-18080}:18080"
+    environment:
+      PORT: "18080"
+      NODE_ENV: production
+    volumes:
+      - ./任务项运行配置工具.md:/app/任务项运行配置工具.md
+      - ./backups:/app/backups

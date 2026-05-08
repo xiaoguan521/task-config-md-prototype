@@ -54,6 +54,23 @@ docker run --rm \
   task-config-md-prototype
 ```
 
+使用 Docker Compose：
+
+```bash
+docker compose up -d --build
+```
+
+默认端口是 `18080`。如需改宿主机端口：
+
+```bash
+APP_PORT=8080 docker compose up -d --build
+```
+
+Compose 会把以下路径挂到宿主机：
+
+- `./任务项运行配置工具.md`
+- `./backups`
+
 ## GitHub
 
 这个目录可以作为新的 public GitHub 仓库根目录，默认分支使用 `main`。
