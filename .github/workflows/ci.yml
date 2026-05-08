@@ -97,16 +97,32 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Generate image tags
+        id: image
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          EAST8_TIMESTAMP="$(TZ=Asia/Shanghai date +'%Y%m%d%H%M')"
+          SHA_TAG="sha-${GITHUB_SHA::7}"
+          {
+            echo "name=${IMAGE}"
+            echo "east8_timestamp=${EAST8_TIMESTAMP}"
+            echo "timestamp_tag=${IMAGE}:${EAST8_TIMESTAMP}"
+            echo "sha_tag=${IMAGE}:${SHA_TAG}"
+            echo "latest_tag=${IMAGE}:latest"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ steps.image.outputs.name }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ steps.image.outputs.east8_timestamp }}
             type=sha,prefix=sha-
 
       - name: Build Docker image
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -114,3 +130,31 @@ jobs:
           push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Write image pull summary
+        run: |
+          {
+            echo "## Docker 镜像"
+            echo
+            echo "| 项目 | 值 |"
+            echo "| --- | --- |"
+            echo "| 镜像 | \`${{ steps.image.outputs.name }}\` |"
+            echo "| 东八区时间戳 | \`${{ steps.image.outputs.east8_timestamp }}\` |"
+            echo "| Digest | \`${{ steps.build.outputs.digest || '仅 PR 构建，无推送 digest' }}\` |"
+            echo
+            echo "### 拉取命令"
+            echo
+            echo "\`\`\`bash"
+            echo "docker pull ${{ steps.image.outputs.timestamp_tag }}"
+            echo "docker pull ${{ steps.image.outputs.sha_tag }}"
+            if [ "${{ github.event_name }}" = "push" ]; then
+              echo "docker pull ${{ steps.image.outputs.latest_tag }}"
+            fi
+            echo "\`\`\`"
+            echo
+            echo "### 运行示例"
+            echo
+            echo "\`\`\`bash"
+            echo "docker run --rm -p 18080:18080 ${{ steps.image.outputs.timestamp_tag }}"
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
