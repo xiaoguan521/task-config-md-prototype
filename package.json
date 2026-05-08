@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "validate:md": "node skills/task-config-md-editor/scripts/validate-task-config-md.js 任务项运行配置工具.md"
   },
   "engines": {
     "node": ">=18"

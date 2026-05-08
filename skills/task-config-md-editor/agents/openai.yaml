@@ -1,0 +1,4 @@
+interface:
+  display_name: "任务配置 Markdown 编辑"
+  short_description: "规范编辑任务项运行配置 Markdown 数据清册。"
+  default_prompt: "按本 skill 修改任务项运行配置工具.md，保持页面导入兼容。"
