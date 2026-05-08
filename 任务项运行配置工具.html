@@ -4141,12 +4141,58 @@
                 return getContextualParamTemplate(row, group).groups || [getDefaultAlgorithmParamGroup()];
             }
 
-            function getParameterConfig(row, group) {
-                if (row && row.paramConfig) {
-                    return row.paramConfig;
+            function getAlgorithmSelectedValues(row) {
+                const values = [];
+                const algorithmParams = row && row.algorithmParams;
+                if (!algorithmParams) {
+                    return values;
                 }
+
+                function appendValues(items) {
+                    if (!Array.isArray(items)) {
+                        return;
+                    }
+                    items.forEach(function (item) {
+                        if (item && values.indexOf(item) === -1) {
+                            values.push(item);
+                        }
+                    });
+                }
+
+                if (Array.isArray(algorithmParams.groups)) {
+                    algorithmParams.groups.forEach(function (group) {
+                        appendValues(group && group.selectedValues);
+                        appendValues(group && group.talentTypes);
+                    });
+                }
+                appendValues(algorithmParams.talentTypes);
+                return values;
+            }
+
+            function getParameterConfig(row, group) {
                 const template = getContextualParamTemplate(row, group);
-                return template.paramConfig;
+                const templateConfig = template && template.paramConfig ? template.paramConfig : {};
+                const rowConfig = row && row.paramConfig ? row.paramConfig : {};
+                const parameterConfig = Object.assign({}, templateConfig, rowConfig);
+                const options = Array.isArray(rowConfig.options)
+                    ? rowConfig.options.slice()
+                    : (Array.isArray(templateConfig.options) ? templateConfig.options.slice() : []);
+
+                getAlgorithmSelectedValues(row).forEach(function (value) {
+                    if (options.indexOf(value) === -1) {
+                        options.push(value);
+                    }
+                });
+
+                parameterConfig.options = options;
+                parameterConfig.label = parameterConfig.label || templateConfig.label || "配置参数";
+                if (parameterConfig.showSelector !== false) {
+                    parameterConfig.showSelector = true;
+                }
+                if (typeof parameterConfig.multiple !== "boolean") {
+                    parameterConfig.multiple = true;
+                }
+                return parameterConfig;
             }
 
             function getSelectedTalentTypesFromGroup(groupElement) {
